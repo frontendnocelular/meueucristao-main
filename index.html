@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Eu Cristão - Jogo Espiritual Interativo</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 428px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #f8fafc;
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            padding: 12px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            margin-top: 16px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .character-section {
+            padding: 24px;
+            text-align: center;
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+            margin: 16px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .character-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(240,242,247,1) 100%);
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.05), 0 8px 32px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .progress-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+        }
+
+        .progress-fill.happiness {
+            background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+        }
+
+        .progress-fill.spiritual {
+            background: linear-gradient(90deg, #fbbf24 0%, #fcd34d 100%);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0 16px 16px;
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .action-btn.prayer {
+            background: linear-gradient(145deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+        }
+
+        .action-btn.challenges {
+            background: linear-gradient(145deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+        }
+
+        .action-btn.customize {
+            background: linear-gradient(145deg, #ec4899 0%, #be185d 100%);
+            box-shadow: 0 4px 16px rgba(236, 72, 153, 0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .bible-verse {
+            background: linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 16px 0;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .btn {
+            background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .timer-display {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            margin: 20px 0;
+            color: #1f2937;
+            font-family: 'Courier New', monospace;
+        }
+
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .color-option.selected {
+            border-color: #3b82f6;
+            transform: scale(1.1);
+        }
+
+        .challenges-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .challenge-item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .challenge-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1f2937;
+        }
+
+        .challenge-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .challenge-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .auth-container {
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .auth-form {
+            background: white;
+            padding: 32px 24px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            margin-top: 24px;
+        }
+
+        .floating-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 215, 0, 0.6);
+            border-radius: 50%;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translate(-50%, -40%) scale(0.9); opacity: 0; }
+            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulsating {
+            animation: pulse 2s infinite;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 2000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .responsive-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100vw;
+            }
+            
+            .modal-content {
+                max-width: 95vw;
+                margin: 10px;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-container">
+            <h1 style="color: white; margin-bottom: 20px; font-size: 28px;">✨ Meu Eu Cristão ✨</h1>
+            <p style="color: rgba(255,255,255,0.9); margin-bottom: 30px;">Transforme sua vida espiritual em uma jornada gamificada</p>
+            
+            <div class="auth-form">
+                <h2 style="margin-bottom: 20px;">Entre ou Cadastre-se</h2>
+                
+                <div class="form-group">
+                    <input type="email" id="emailInput" class="form-input" placeholder="Digite seu e-mail">
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" id="passwordInput" class="form-input" placeholder="Digite sua senha">
+                </div>
+                
+                <button id="loginBtn" class="btn" style="width: 100%; margin-bottom: 12px;">
+                    <span id="loginBtnText">Entrar</span>
+                    <div id="loginLoader" class="loading" style="display: none;"></div>
+                </button>
+                
+                <button id="registerBtn" class="btn btn-success" style="width: 100%;">
+                    Criar Conta
+                </button>
+                
+                <p style="margin-top: 16px; font-size: 12px; color: #6b7280;">
+                    Seus dados ficam seguros com Firebase
+                </p>
+            </div>
+        </div>
+
+        <!-- Game Section -->
+        <div id="gameSection" style="display: none;">
+            <!-- Header -->
+            <div class="header">
+                <h1>🙏 Meu Eu Cristão</h1>
+                <p id="welcomeText">Bem-vindo, Cristão!</p>
+                
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span>⭐</span>
+                        <span>Nível <span id="levelDisplay">1</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span>🏆</span>
+                        <span><span id="medalsDisplay">0</span> medalhas</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>⚡</span>
+                        <span><span id="xpDisplay">0</span> XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Section -->
+            <div class="character-section">
+                <div class="character-container">
+                    <canvas id="characterCanvas" class="character-canvas"></canvas>
+                    <div class="floating-particles" id="spiritualAura"></div>
+                </div>
+                
+                <h3 id="characterName">Meu Eu Cristão</h3>
+                
+                <div class="progress-bars">
+                    <div class="progress-item">
+                        <span>❤️</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill happiness" id="happinessBar" style="width: 30%;"></div>
+                        </div>
+                        <span id="happinessText">30%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                        <span>✨</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill spiritual" id="spiritualBar" style="width: 0%;"></div>
+                        </div>
+                        <span id="spiritualText">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="responsive-grid">
+                <button class="action-btn" onclick="openBibleModal()">
+                    <i data-lucide="book-open"></i>
+                    <span>Ler Bíblia</span>
+                </button>
+                
+                <button class="action-btn prayer" onclick="openPrayerModal()">
+                    <i data-lucide="heart"></i>
+                    <span>Orar</span>
+                </button>
+                
+                <button class="action-btn challenges" onclick="openChallengesModal()">
+                    <i data-lucide="target"></i>
+                    <span>Desafios</span>
+                </button>
+                
+                <button class="action-btn customize" onclick="openCustomizeModal()">
+                    <i data-lucide="palette"></i>
+                    <span>Personalizar</span>
+                </button>
+            </div>
+
+            <!-- Progress Card -->
+            <div style="margin: 16px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+                <h3 style="margin-bottom: 16px;">📊 Seu Progresso Espiritual</h3>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Capítulos lidos:</span>
+                    <span id="chaptersCount">0</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Orações feitas:</span>
+                    <span id="prayersCount">0</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Desafios completados:</span>
+                    <span id="challengesCompleted">0</span>
+                </div>
+                
+                <button class="btn btn-danger" onclick="logout()" style="width: 100%; margin-top: 16px;">
+                    Sair da Conta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bible Modal -->
+    <div id="bibleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="book-open"></i> Leitura Bíblica</h2>
+                <button class="close-btn" onclick="closeBibleModal()">&times;</button>
+            </div>
+            
+            <div class="bible-verse">
+                <h4 style="margin-bottom: 12px;">📖 Versículo de Hoje</h4>
+                <p id="dailyVerse" style="font-style: italic; line-height: 1.6;">
+                    "Lâmpada para os meus pés é tua palavra, e luz para o meu caminho." - Salmos 119:105
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Qual capítulo você leu hoje?</label>
+                <select id="chapterSelect" class="form-select">
+                    <option value="">Selecione um capítulo...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Reflexão (opcional):</label>
+                <textarea id="reflectionText" class="form-textarea" rows="3" placeholder="O que Deus falou com você hoje?"></textarea>
+            </div>
+            
+            <button class="btn btn-success" onclick="completeReading()" style="width: 100%;">
+                ✅ Concluir Leitura
+            </button>
+        </div>
+    </div>
+
+    <!-- Prayer Modal -->
+    <div id="prayerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="heart"></i> Tempo de Oração</h2>
+                <button class="close-btn" onclick="closePrayerModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Duração da oração:</label>
+                <select id="prayerDuration" class="form-select">
+                    <option value="300">5 minutos</option>
+                    <option value="600">10 minutos</option>
+                    <option value="900">15 minutos</option>
+                    <option value="1800">30 minutos</option>
+                    <option value="3600">1 hora</option>
+                </select>
+            </div>
+            
+            <div id="prayerTimer" style="display: none;">
+                <div class="timer-display" id="timerDisplay">05:00</div>
+                <div style="text-align: center; gap: 12px; display: flex; justify-content: center;">
+                    <button class="btn" onclick="pauseResumePrayer()" id="pauseBtn">⏸️ Pausar</button>
+                    <button class="btn btn-danger" onclick="stopPrayer()">⏹️ Parar</button>
+                </div>
+            </div>
+            
+            <button id="startPrayerBtn" class="btn btn-success" onclick="startPrayer()" style="width: 100%;">
+                🙏 Começar Oração
+            </button>
+        </div>
+    </div>
+
+    <!-- Challenges Modal -->
+    <div id="challengesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="target"></i> Meus Desafios</h2>
+                <button class="close-btn" onclick="closeChallengesModal()">&times;</button>
+            </div>
+            
+            <button class="btn" onclick="showNewChallengeForm()" style="width: 100%; margin-bottom: 16px;">
+                ➕ Adicionar Novo Desafio
+            </button>
+            
+            <div id="newChallengeForm" style="display: none; margin-bottom: 16px; padding: 16px; background: #f8fafc; border-radius: 12px;">
+                <div class="form-group">
+                    <label class="form-label">Título do desafio:</label>
+                    <input type="text" id="challengeTitle" class="form-input" placeholder="Ex: Controlar o lazer em jogos">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Como vai lidar com isso:</label>
+                    <textarea id="challengeDescription" class="form-textarea" rows="3" placeholder="Ex: Ler 5 capítulos antes de jogar"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-success" onclick="addChallenge()">Adicionar</button>
+                    <button class="btn" onclick="hideNewChallengeForm()">Cancelar</button>
+                </div>
+            </div>
+            
+            <div id="challengesList" class="challenges-list">
+                <!-- Challenges will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Customize Modal -->
+    <div id="customizeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i data-lucide="palette"></i> Personalizar Personagem</h2>
+                <button class="close-btn" onclick="closeCustomizeModal()">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Nome do personagem:</label>
+                <input type="text" id="characterNameInput" class="form-input" placeholder="Digite o nome">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Cor da pele:</label>
+                <div class="color-picker" id="skinColorPicker">
+                    <div class="color-option" data-color="#FDBCB4" style="background-color: #FDBCB4;"></div>
+                    <div class="color-option" data-color="#EEA990" style="background-color: #EEA990;"></div>
+                    <div class="color-option" data-color="#D08B5B" style="background-color: #D08B5B;"></div>
+                    <div class="color-option" data-color="#AE5D29" style="background-color: #AE5D29;"></div>
+                    <div class="color-option" data-color="#8B4513" style="background-color: #8B4513;"></div>
+                    <div class="color-option" data-color="#654321" style="background-color: #654321;"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Cor do cabelo:</label>
+                <div class="color-picker" id="hairColorPicker">
+                    <div class="color-option" data-color="#FFD700" style="background-color: #FFD700;"></div>
+                    <div class="color-option" data-color="#8B4513" style="background-color: #8B4513;"></div>
+                    <div class="color-option" data-color="#000000" style="background-color: #000000;"></div>
+                    <div class="color-option" data-color="#696969" style="background-color: #696969;"></div>
+                    <div class="color-option" data-color="#DC143C" style="background-color: #DC143C;"></div>
+                    <div class="color-option" data-color="#4B0082" style="background-color: #4B0082;"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Cor dos olhos:</label>
+                <div class="color-picker" id="eyeColorPicker">
+                    <div class="color-option" data-color="#8B4513" style="background-color: #8B4513;"></div>
+                    <div class="color-option" data-color="#228B22" style="background-color: #228B22;"></div>
+                    <div class="color-option" data-color="#4169E1" style="background-color: #4169E1;"></div>
+                    <div class="color-option" data-color="#696969" style="background-color: #696969;"></div>
+                    <div class="color-option" data-color="#32CD32" style="background-color: #32CD32;"></div>
+                    <div class="color-option" data-color="#800080" style="background-color: #800080;"></div>
+                </div>
+            </div>
+            
+            <button class="btn btn-success" onclick="saveCustomization()" style="width: 100%; margin-top: 16px;">
+                💾 Salvar Personalização
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Audio Elements -->
+    <audio id="successSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAMAAAAAAMQAAAABAAEAAP//EABVAA==" type="audio/wav">
+    </audio>
+    
+    <audio id="levelUpSound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAMAAAAAAMQAAAABAAEAAP//EABVAA==" type="audio/wav">
+    </audio>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpGG51z73LZuNsf7AuoDO2LkvZK9v76ZA",
+            authDomain: "meueucristao.firebaseapp.com",
+            projectId: "meueucristao",
+            storageBucket: "meueucristao.firebasestorage.app",
+            messagingSenderId: "269170829",
+            appId: "1:269170829:web:8a56dd0aa09f4629624ac4"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Game State
+        let gameState = {
+            userId: null,
+            characterName: "Meu Eu Cristão",
+            level: 1,
+            xp: 0,
+            medals: 0,
+            happiness: 30,
+            spiritualBrightness: 0,
+            chaptersRead: [],
+            prayersCompleted: 0,
+            challenges: [],
+            customization: {
+                skinColor: "#FDBCB4",
+                hairColor: "#8B4513",
+                eyeColor: "#8B4513"
+            }
+        };
+
+        // Prayer Timer
+        let prayerTimer = null;
+        let prayerTimeLeft = 0;
+        let prayerPaused = false;
+
+        // Bible Books Data
+        const BIBLE_BOOKS = [
+            { name: "Gênesis", chapters: 50 },
+            { name: "Êxodo", chapters: 40 },
+            { name: "Levítico", chapters: 27 },
+            { name: "Números", chapters: 36 },
+            { name: "Deuteronômio", chapters: 34 },
+            { name: "Josué", chapters: 24 },
+            { name: "Juízes", chapters: 21 },
+            { name: "Rute", chapters: 4 },
+            { name: "1 Samuel", chapters: 31 },
+            { name: "2 Samuel", chapters: 24 },
+            { name: "1 Reis", chapters: 22 },
+            { name: "2 Reis", chapters: 25 },
+            { name: "1 Crônicas", chapters: 29 },
+            { name: "2 Crônicas", chapters: 36 },
+            { name: "Esdras", chapters: 10 },
+            { name: "Neemias", chapters: 13 },
+            { name: "Ester", chapters: 10 },
+            { name: "Jó", chapters: 42 },
+            { name: "Salmos", chapters: 150 },
+            { name: "Provérbios", chapters: 31 },
+            { name: "Eclesiastes", chapters: 12 },
+            { name: "Cantares", chapters: 8 },
+            { name: "Isaías", chapters: 66 },
+            { name: "Jeremias", chapters: 52 },
+            { name: "Lamentações", chapters: 5 },
+            { name: "Ezequiel", chapters: 48 },
+            { name: "Daniel", chapters: 12 },
+            { name: "Oséias", chapters: 14 },
+            { name: "Joel", chapters: 3 },
+            { name: "Amós", chapters: 9 },
+            { name: "Obadias", chapters: 1 },
+            { name: "Jonas", chapters: 4 },
+            { name: "Miquéias", chapters: 7 },
+            { name: "Naum", chapters: 3 },
+            { name: "Habacuque", chapters: 3 },
+            { name: "Sofonias", chapters: 3 },
+            { name: "Ageu", chapters: 2 },
+            { name: "Zacarias", chapters: 14 },
+            { name: "Malaquias", chapters: 4 },
+            { name: "Mateus", chapters: 28 },
+            { name: "Marcos", chapters: 16 },
+            { name: "Lucas", chapters: 24 },
+            { name: "João", chapters: 21 },
+            { name: "Atos", chapters: 28 },
+            { name: "Romanos", chapters: 16 },
+            { name: "1 Coríntios", chapters: 16 },
+            { name: "2 Coríntios", chapters: 13 },
+            { name: "Gálatas", chapters: 6 },
+            { name: "Efésios", chapters: 6 },
+            { name: "Filipenses", chapters: 4 },
+            { name: "Colossenses", chapters: 4 },
+            { name: "1 Tessalonicenses", chapters: 5 },
+            { name: "2 Tessalonicenses", chapters: 3 },
+            { name: "1 Timóteo", chapters: 6 },
+            { name: "2 Timóteo", chapters: 4 },
+            { name: "Tito", chapters: 3 },
+            { name: "Filemom", chapters: 1 },
+            { name: "Hebreus", chapters: 13 },
+            { name: "Tiago", chapters: 5 },
+            { name: "1 Pedro", chapters: 5 },
+            { name: "2 Pedro", chapters: 3 },
+            { name: "1 João", chapters: 5 },
+            { name: "2 João", chapters: 1 },
+            { name: "3 João", chapters: 1 },
+            { name: "Judas", chapters: 1 },
+            { name: "Apocalipse", chapters: 22 }
+        ];
+
+        // Daily Bible Verses
+        const DAILY_VERSES = [
+            "Lâmpada para os meus pés é tua palavra, e luz para o meu caminho. - Salmos 119:105",
+            "Confie no Senhor de todo o seu coração e não se apoie em seu próprio entendimento. - Provérbios 3:5",
+            "Porque eu sei os planos que tenho para vocês, diz o Senhor, planos de fazê-los prosperar e não de causar dano. - Jeremias 29:11",
+            "Tudo posso naquele que me fortalece. - Filipenses 4:13",
+            "O Senhor é o meu pastor, nada me faltará. - Salmos 23:1",
+            "Buscai primeiro o reino de Deus e a sua justiça, e todas estas coisas vos serão acrescentadas. - Mateus 6:33"
+        ];
+
+        // Three.js Character Setup
+        let scene, camera, renderer, characterMesh;
+        let characterGeometry, characterMaterial;
+
+        function initThreeJS() {
+            const canvas = document.getElementById('characterCanvas');
+            const container = canvas.parentElement;
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            
+            renderer.setSize(200, 200);
+            renderer.setClearColor(0x000000, 0);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Character creation
+            createCharacter();
+            
+            camera.position.z = 3;
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (characterMesh) {
+                    characterMesh.rotation.y += 0.005;
+                }
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        function createCharacter() {
+            // Remove existing character
+            if (characterMesh) {
+                scene.remove(characterMesh);
+            }
+
+            // Create character group
+            characterMesh = new THREE.Group();
+
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
+                color: new THREE.Color(gameState.customization.skinColor)
+            });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 0.5;
+            head.castShadow = true;
+            characterMesh.add(head);
+
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+            const eyeMaterial = new THREE.MeshLambertMaterial({ 
+                color: new THREE.Color(gameState.customization.eyeColor)
+            });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.15, 0.6, 0.5);
+            characterMesh.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(0.15, 0.6, 0.5);
+            characterMesh.add(rightEye);
+
+            // Hair (changes with spiritual progress)
+            const hairGeometry = new THREE.SphereGeometry(0.65, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const hairMaterial = new THREE.MeshLambertMaterial({ 
+                color: new THREE.Color(gameState.customization.hairColor)
+            });
+            const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+            hair.position.y = 0.8;
+            characterMesh.add(hair);
+
+            // Beard (reduces with happiness)
+            if (gameState.happiness < 70) {
+                const beardSize = (70 - gameState.happiness) / 100;
+                const beardGeometry = new THREE.SphereGeometry(0.3 * beardSize, 16, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+                const beardMaterial = new THREE.MeshLambertMaterial({ 
+                    color: new THREE.Color(gameState.customization.hairColor).multiplyScalar(0.7)
+                });
+                const beard = new THREE.Mesh(beardGeometry, beardMaterial);
+                beard.position.set(0, 0.2, 0.4);
+                characterMesh.add(beard);
+            }
+
+            // Cross (appears with spiritual progress)
+            if (gameState.spiritualBrightness > 20) {
+                const crossGeometry = new THREE.BoxGeometry(0.05, 0.3, 0.05);
+                const crossMaterial = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
+                const crossVertical = new THREE.Mesh(crossGeometry, crossMaterial);
+                crossVertical.position.set(0, -0.2, 0.6);
+                characterMesh.add(crossVertical);
+                
+                const crossHorizontal = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.2, 0.05, 0.05), 
+                    crossMaterial
+                );
+                crossHorizontal.position.set(0, -0.1, 0.6);
+                characterMesh.add(crossHorizontal);
+            }
+
+            // Halo (high spiritual progress)
+            if (gameState.spiritualBrightness > 70) {
+                const haloGeometry = new THREE.TorusGeometry(0.8, 0.05, 8, 32);
+                const haloMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFFD700,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+                halo.position.y = 1.2;
+                halo.rotation.x = Math.PI / 2;
+                characterMesh.add(halo);
+            }
+
+            // Add glow effect based on spiritual brightness
+            if (gameState.spiritualBrightness > 0) {
+                const glowGeometry = new THREE.SphereGeometry(1, 32, 32);
+                const glowMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xFFD700,
+                    transparent: true,
+                    opacity: gameState.spiritualBrightness / 500
+                });
+                const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                characterMesh.add(glow);
+            }
+
+            scene.add(characterMesh);
+        }
+
+        // Auth Functions
+        function showLoading(btn, show = true) {
+            const text = btn.querySelector('span') || btn;
+            const loader = btn.querySelector('.loading');
+            
+            if (show) {
+                text.style.display = 'none';
+                if (loader) loader.style.display = 'inline-block';
+                btn.disabled = true;
+            } else {
+                text.style.display = 'inline-block';
+                if (loader) loader.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const btn = document.getElementById('loginBtn');
+            
+            if (!email || !password) {
+                showNotification('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+            
+            showLoading(btn);
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showNotification('Login realizado com sucesso! 🎉');
+            } catch (error) {
+                showNotification('Erro ao fazer login: ' + error.message, 'error');
+                showLoading(btn, false);
+            }
+        });
+
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const btn = document.getElementById('registerBtn');
+            
+            if (!email || !password) {
+                showNotification('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showNotification('A senha deve ter pelo menos 6 caracteres.', 'error');
+                return;
+            }
+            
+            showLoading(btn);
+            
+            try {
+                await auth.createUserWithEmailAndPassword(email, password);
+                showNotification('Conta criada com sucesso! Bem-vindo! 🎉');
+            } catch (error) {
+                showNotification('Erro ao criar conta: ' + error.message, 'error');
+                showLoading(btn, false);
+            }
+        });
+
+        // Auth State Observer
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                gameState.userId = user.uid;
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('gameSection').style.display = 'block';
+                
+                // Load user data
+                await loadGameData();
+                updateUI();
+                initThreeJS();
+                populateBibleSelect();
+                loadChallenges();
+                
+                document.getElementById('welcomeText').textContent = 
+                    `Bem-vindo, ${gameState.characterName}!`;
+            } else {
+                document.getElementById('authSection').style.display = 'block';
+                document.getElementById('gameSection').style.display = 'none';
+            }
+        });
+
+        async function logout() {
+            try {
+                await auth.signOut();
+                showNotification('Logout realizado com sucesso!');
+            } catch (error) {
+                showNotification('Erro ao fazer logout: ' + error.message, 'error');
+            }
+        }
+
+        // Database Functions
+        async function saveGameData() {
+            if (!gameState.userId) return;
+            
+            try {
+                await database.ref(`users/${gameState.userId}`).set({
+                    ...gameState,
+                    lastUpdated: Date.now()
+                });
+            } catch (error) {
+                console.error('Error saving game data:', error);
+            }
+        }
+
+        async function loadGameData() {
+            if (!gameState.userId) return;
+            
+            try {
+                const snapshot = await database.ref(`users/${gameState.userId}`).once('value');
+                const data = snapshot.val();
+                
+                if (data) {
+                    gameState = { ...gameState, ...data };
+                } else {
+                    // First time user - save initial data
+                    await saveGameData();
+                }
+            } catch (error) {
+                console.error('Error loading game data:', error);
+            }
+        }
+
+        // UI Update Functions
+        function updateUI() {
+            // Update stats
+            document.getElementById('levelDisplay').textContent = gameState.level;
+            document.getElementById('medalsDisplay').textContent = gameState.medals;
+            document.getElementById('xpDisplay').textContent = gameState.xp;
+            
+            // Update progress bars
+            document.getElementById('happinessBar').style.width = gameState.happiness + '%';
+            document.getElementById('happinessText').textContent = gameState.happiness + '%';
+            document.getElementById('spiritualBar').style.width = gameState.spiritualBrightness + '%';
+            document.getElementById('spiritualText').textContent = gameState.spiritualBrightness + '%';
+            
+            // Update character name
+            document.getElementById('characterName').textContent = gameState.characterName;
+            
+            // Update progress counts
+            document.getElementById('chaptersCount').textContent = gameState.chaptersRead.length;
+            document.getElementById('prayersCount').textContent = gameState.prayersCompleted;
+            document.getElementById('challengesCompleted').textContent = 
+                gameState.challenges.filter(c => c.completed).length;
+            
+            // Update character if Three.js is initialized
+            if (scene) {
+                createCharacter();
+            }
+            
+            // Add spiritual particles
+            updateSpiritualAura();
+        }
+
+        function updateSpiritualAura() {
+            const aura = document.getElementById('spiritualAura');
+            aura.innerHTML = '';
+            
+            if (gameState.spiritualBrightness > 20) {
+                const particleCount = Math.floor(gameState.spiritualBrightness / 10);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 3 + 's';
+                    particle.style.animationDuration = (2 + Math.random() * 2) + 's';
+                    aura.appendChild(particle);
+                }
+            }
+        }
+
+        function calculateStats() {
+            const totalChapters = gameState.chaptersRead.length;
+            gameState.xp = totalChapters * 100 + gameState.prayersCompleted * 50;
+            gameState.medals = totalChapters;
+            gameState.level = Math.floor(gameState.xp / 500) + 1;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type === 'error' ? 'notification-error' : ''} show`;
+            
+            if (type === 'error') {
+                notification.style.background = '#ef4444';
+            } else {
+                notification.style.background = '#10b981';
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Bible Reading Functions
+        function populateBibleSelect() {
+            const select = document.getElementById('chapterSelect');
+            select.innerHTML = '<option value="">Selecione um capítulo...</option>';
+            
+            BIBLE_BOOKS.forEach(book => {
+                for (let i = 1; i <= book.chapters; i++) {
+                    const chapterName = `${book.name} ${i}`;
+                    const option = document.createElement('option');
+                    option.value = chapterName;
+                    option.textContent = chapterName;
+                    
+                    if (gameState.chaptersRead.includes(chapterName)) {
+                        option.textContent += ' ✓';
+                        option.disabled = true;
+                    }
+                    
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function openBibleModal() {
+            document.getElementById('bibleModal').style.display = 'flex';
+            
+            // Set random daily verse
+            const verse = DAILY_VERSES[Math.floor(Math.random() * DAILY_VERSES.length)];
+            document.getElementById('dailyVerse').textContent = verse;
+        }
+
+        function closeBibleModal() {
+            document.getElementById('bibleModal').style.display = 'none';
+            document.getElementById('chapterSelect').value = '';
+            document.getElementById('reflectionText').value = '';
+        }
+
+        async function completeReading() {
+            const selectedChapter = document.getElementById('chapterSelect').value;
+            const reflection = document.getElementById('reflectionText').value;
+            
+            if (!selectedChapter) {
+                showNotification('Por favor, selecione um capítulo.', 'error');
+                return;
+            }
+            
+            if (gameState.chaptersRead.includes(selectedChapter)) {
+                showNotification('Você já leu este capítulo!', 'error');
+                return;
+            }
+            
+            // Add to read chapters
+            gameState.chaptersRead.push(selectedChapter);
+            
+            // Update happiness and spiritual brightness
+            gameState.happiness = Math.min(100, gameState.happiness + 5);
+            gameState.spiritualBrightness = Math.min(100, gameState.spiritualBrightness + 3);
+            
+            // Calculate new stats
+            calculateStats();
+            
+            // Play success sound
+            playSound('success');
+            
+            // Check for level up
+            const oldLevel = Math.floor((gameState.xp - 100) / 500) + 1;
+            if (gameState.level > oldLevel) {
+                playSound('levelUp');
+                showNotification(`🎉 Parabéns! Você subiu para o nível ${gameState.level}!`);
+            } else {
+                showNotification('📖 Leitura concluída! +100 XP');
+            }
+            
+            // Save reflection if provided
+            if (reflection) {
+                const reflectionData = {
+                    chapter: selectedChapter,
+                    reflection: reflection,
+                    date: Date.now()
+                };
+                
+                await database.ref(`users/${gameState.userId}/reflections`).push(reflectionData);
+            }
+            
+            // Save and update UI
+            await saveGameData();
+            updateUI();
+            populateBibleSelect();
+            closeBibleModal();
+        }
+
+        // Prayer Functions
+        function openPrayerModal() {
+            document.getElementById('prayerModal').style.display = 'flex';
+        }
+
+        function closePrayerModal() {
+            document.getElementById('prayerModal').style.display = 'none';
+            stopPrayer();
+        }
+
+        function startPrayer() {
+            const duration = parseInt(document.getElementById('prayerDuration').value);
+            prayerTimeLeft = duration;
+            prayerPaused = false;
+            
+            document.getElementById('startPrayerBtn').style.display = 'none';
+            document.getElementById('prayerTimer').style.display = 'block';
+            
+            prayerTimer = setInterval(() => {
+                if (!prayerPaused) {
+                    prayerTimeLeft--;
+                    updatePrayerDisplay();
+                    
+                    if (prayerTimeLeft <= 0) {
+                        completePrayer();
+                    }
+                }
+            }, 1000);
+            
+            updatePrayerDisplay();
+        }
+
+        function pauseResumePrayer() {
+            prayerPaused = !prayerPaused;
+            const btn = document.getElementById('pauseBtn');
+            btn.textContent = prayerPaused ? '▶️ Retomar' : '⏸️ Pausar';
+        }
+
+        function stopPrayer() {
+            if (prayerTimer) {
+                clearInterval(prayerTimer);
+                prayerTimer = null;
+            }
+            
+            document.getElementById('startPrayerBtn').style.display = 'block';
+            document.getElementById('prayerTimer').style.display = 'none';
+            document.getElementById('pauseBtn').textContent = '⏸️ Pausar';
+            prayerPaused = false;
+        }
+
+        function updatePrayerDisplay() {
+            const minutes = Math.floor(prayerTimeLeft / 60);
+            const seconds = prayerTimeLeft % 60;
+            document.getElementById('timerDisplay').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function completePrayer() {
+            stopPrayer();
+            
+            // Update stats
+            gameState.prayersCompleted++;
+            gameState.happiness = Math.min(100, gameState.happiness + 10);
+            gameState.spiritualBrightness = Math.min(100, gameState.spiritualBrightness + 5);
+            
+            calculateStats();
+            
+            // Play success sound
+            playSound('success');
+            showNotification('🙏 Oração concluída! Que Deus abençoe!');
+            
+            // Save and update UI
+            await saveGameData();
+            updateUI();
+            closePrayerModal();
+        }
+
+        // Challenge Functions
+        function openChallengesModal() {
+            document.getElementById('challengesModal').style.display = 'flex';
+            loadChallenges();
+        }
+
+        function closeChallengesModal() {
+            document.getElementById('challengesModal').style.display = 'none';
+            hideNewChallengeForm();
+        }
+
+        function showNewChallengeForm() {
+            document.getElementById('newChallengeForm').style.display = 'block';
+        }
+
+        function hideNewChallengeForm() {
+            document.getElementById('newChallengeForm').style.display = 'none';
+            document.getElementById('challengeTitle').value = '';
+            document.getElementById('challengeDescription').value = '';
+        }
+
+        async function addChallenge() {
+            const title = document.getElementById('challengeTitle').value.trim();
+            const description = document.getElementById('challengeDescription').value.trim();
+            
+            if (!title || !description) {
+                showNotification('Por favor, preencha todos os campos.', 'error');
+                return;
+            }
+            
+            const challenge = {
+                id: Date.now(),
+                title: title,
+                description: description,
+                completed: false,
+                createdAt: Date.now()
+            };
+            
+            gameState.challenges.push(challenge);
+            
+            await saveGameData();
+            loadChallenges();
+            hideNewChallengeForm();
+            
+            showNotification('✨ Desafio adicionado com sucesso!');
+        }
+
+        function loadChallenges() {
+            const container = document.getElementById('challengesList');
+            container.innerHTML = '';
+            
+            if (gameState.challenges.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280;">Nenhum desafio criado ainda. Que tal adicionar um?</p>';
+                return;
+            }
+            
+            gameState.challenges.forEach(challenge => {
+                const item = document.createElement('div');
+                item.className = `challenge-item ${challenge.completed ? 'completed' : ''}`;
+                
+                item.innerHTML = `
+                    <div class="challenge-title">${challenge.title}</div>
+                    <div class="challenge-description">${challenge.description}</div>
+                    <div class="challenge-actions">
+                        ${!challenge.completed ? 
+                            `<button class="btn btn-success" onclick="completeChallenge(${challenge.id})">✅ Completar</button>` : 
+                            `<span style="color: #10b981; font-weight: 600;">✅ Concluído</span>`
+                        }
+                        <button class="btn btn-danger" onclick="deleteChallenge(${challenge.id})">🗑️ Excluir</button>
+                    </div>
+                `;
+                
+                if (challenge.completed) {
+                    item.style.opacity = '0.6';
+                    item.style.background = '#f0f9f0';
+                }
+                
+                container.appendChild(item);
+            });
+        }
+
+        async function completeChallenge(challengeId) {
+            const challenge = gameState.challenges.find(c => c.id === challengeId);
+            if (challenge && !challenge.completed) {
+                challenge.completed = true;
+                
+                // Reward for completing challenge
+                gameState.happiness = Math.min(100, gameState.happiness + 15);
+                gameState.spiritualBrightness = Math.min(100, gameState.spiritualBrightness + 10);
+                
+                calculateStats();
+                
+                playSound('success');
+                showNotification('🎉 Desafio concluído! Você está crescendo espiritualmente!');
+                
+                await saveGameData();
+                updateUI();
+                loadChallenges();
+            }
+        }
+
+        async function deleteChallenge(challengeId) {
+            if (confirm('Tem certeza que deseja excluir este desafio?')) {
+                gameState.challenges = gameState.challenges.filter(c => c.id !== challengeId);
+                
+                await saveGameData();
+                loadChallenges();
+                
+                showNotification('Desafio excluído.');
+            }
+        }
+
+        // Customization Functions
+        function openCustomizeModal() {
+            document.getElementById('customizeModal').style.display = 'flex';
+            document.getElementById('characterNameInput').value = gameState.characterName;
+            
+            // Update color pickers
+            updateColorPickers();
+        }
+
+        function closeCustomizeModal() {
+            document.getElementById('customizeModal').style.display = 'none';
+        }
+
+        function updateColorPickers() {
+            // Skin color
+            document.querySelectorAll('#skinColorPicker .color-option').forEach(option => {
+                option.classList.toggle('selected', option.dataset.color === gameState.customization.skinColor);
+                option.onclick = () => selectColor('skin', option.dataset.color);
+            });
+            
+            // Hair color
+            document.querySelectorAll('#hairColorPicker .color-option').forEach(option => {
+                option.classList.toggle('selected', option.dataset.color === gameState.customization.hairColor);
+                option.onclick = () => selectColor('hair', option.dataset.color);
+            });
+            
+            // Eye color
+            document.querySelectorAll('#eyeColorPicker .color-option').forEach(option => {
+                option.classList.toggle('selected', option.dataset.color === gameState.customization.eyeColor);
+                option.onclick = () => selectColor('eye', option.dataset.color);
+            });
+        }
+
+        function selectColor(type, color) {
+            const pickers = {
+                'skin': '#skinColorPicker',
+                'hair': '#hairColorPicker',
+                'eye': '#eyeColorPicker'
+            };
+            
+            // Update selection visually
+            document.querySelectorAll(`${pickers[type]} .color-option`).forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`${pickers[type]} [data-color="${color}"]`).classList.add('selected');
+            
+            // Update game state
+            if (type === 'skin') gameState.customization.skinColor = color;
+            if (type === 'hair') gameState.customization.hairColor = color;
+            if (type === 'eye') gameState.customization.eyeColor = color;
+            
+            // Update character immediately
+            if (scene) {
+                createCharacter();
+            }
+        }
+
+        async function saveCustomization() {
+            const newName = document.getElementById('characterNameInput').value.trim();
+            
+            if (newName) {
+                gameState.characterName = newName;
+            }
+            
+            await saveGameData();
+            updateUI();
+            closeCustomizeModal();
+            
+            showNotification('🎨 Personalização salva com sucesso!');
+        }
+
+        // Sound Functions
+        function playSound(type) {
+            try {
+                const audio = document.getElementById(type + 'Sound');
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                }
+            } catch (error) {
+                console.log('Audio error:', error);
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            lucide.createIcons();
+            
+            // Add loading animation to character section
+            const characterSection = document.querySelector('.character-section');
+            if (characterSection) {
+                characterSection.classList.add('pulsating');
+            }
+        });
+
+        // Click outside modal to close
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        };
+
+        // Prevent form submission on enter
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+
+        console.log('🙏 Meu Eu Cristão iniciado com sucesso!');
+    </script>
+</body>
+</html>
